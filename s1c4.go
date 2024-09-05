@@ -10,7 +10,7 @@ import (
 
 func s1c4() {
 
-	fmt.Println("Set 1, Challenge 4: Detect single-character XOR")
+	fmt.Println("> Set 1, Challenge 4: Detect single-character XOR")
 
 	file, err := os.Open("s1c4.txt")
 	if err != nil {

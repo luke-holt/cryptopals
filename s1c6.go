@@ -85,7 +85,7 @@ func most_likely_keysize(buffer []byte) int {
 
 func s1c6() {
 
-	fmt.Println("Set 1, Challenge 6: Break repeating-key XOR")
+	fmt.Println("> Set 1, Challenge 6: Break repeating-key XOR")
 
 	fmt.Printf("Hamming distance test: expected(37) == actual(%d)\n", hamming_dist_test())
 

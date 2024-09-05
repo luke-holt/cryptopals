@@ -10,7 +10,7 @@ import (
 )
 
 func s1c7() {
-	fmt.Println("Set 1, Challenge 7: AES in ECB mode")
+	fmt.Println("> Set 1, Challenge 7: AES in ECB mode")
 
 	file_buffer, err := os.ReadFile("s1c7.txt")
 	if err != nil {

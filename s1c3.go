@@ -7,7 +7,7 @@ import (
 
 func s1c3() {
 
-	fmt.Println("Set 1, Challenge 3: Singe-byte XOR cipher")
+	fmt.Println("> Set 1, Challenge 3: Singe-byte XOR cipher")
 
 	encrypted, _ := hex.DecodeString("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
 
