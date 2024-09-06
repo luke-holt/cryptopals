@@ -25,9 +25,10 @@ func s1c7() {
 
 	var cipher_key []byte = []byte("YELLOW SUBMARINE")
 
-	exists, _ := openssl.CheckVersion("latest")
-	if !exists {
-		log.Fatal("Cannot load OpenSSL version latest")
+	libcrypto := string("c:/users/luke/repo/openssl/libcrypto-3-x64.dll")
+	err = openssl.Init(libcrypto)
+	if err != nil {
+		log.Fatal("Could not load openssl lib from ", libcrypto)
 	}
 
 	cipher, err := openssl.NewAESCipher(cipher_key)
@@ -35,5 +36,17 @@ func s1c7() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(cipher)
+	var decrypted []byte = make([]byte, len(base64_decoded_buffer))
+	cipher.Decrypt(decrypted, base64_decoded_buffer)
+
+	var solution []byte = make([]byte, 0)
+	var zeroes int
+	for _, b := range decrypted {
+		if b == 0 {
+			zeroes++
+		} else {
+			solution = append(solution, b)
+		}
+	}
+	fmt.Printf("Solution: \"%s\", followed by %d zeroes (\"black\")\n", solution, zeroes)
 }
