@@ -5,16 +5,6 @@ import (
 	"strings"
 )
 
-func pkcs7_padding(src []byte, blocklen byte) []byte {
-	pad := blocklen - byte(len(src)%int(blocklen))
-	padded := make([]byte, len(src)+int(pad))
-	copy(padded, src)
-	for i := range int(pad) {
-		padded[len(src)+i] = pad
-	}
-	return padded
-}
-
 func s2c9() {
 	fmt.Println("> Set 2, Challenge 9: Implement PKCS#7 padding")
 

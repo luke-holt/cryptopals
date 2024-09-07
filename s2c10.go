@@ -30,7 +30,6 @@ func s2c10() {
 	}
 
 	cipher_key := []byte("YELLOW SUBMARINE")
-	blocklen := len(cipher_key)
 
 	cipher, err := openssl.NewAESCipher(cipher_key)
 	if err != nil {
@@ -39,10 +38,10 @@ func s2c10() {
 
 	decrypted := make([]byte, len(base64_decoded_buffer))
 
-	iv := make([]byte, blocklen)
-	for i := range int(len(base64_decoded_buffer) / blocklen) {
-		start := i * blocklen
-		end := min((i+1)*blocklen, len(base64_decoded_buffer))
+	iv := make([]byte, AES_BLOCKLEN)
+	for i := range int(len(base64_decoded_buffer) / AES_BLOCKLEN) {
+		start := i * AES_BLOCKLEN
+		end := min((i+1)*AES_BLOCKLEN, len(base64_decoded_buffer))
 
 		ciphertext := base64_decoded_buffer[start:end]
 		block := make([]byte, len(ciphertext))

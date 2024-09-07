@@ -2,6 +2,8 @@ package main
 
 import "bytes"
 
+const AES_BLOCKLEN int = 16
+
 func within(x, lower, upper int) bool {
 	return (x <= upper) && (x >= lower)
 }
@@ -53,4 +55,28 @@ func solve_single_char_xor(encrypted []byte) (byte, float64) {
 		}
 	}
 	return min_err_key, min_err
+}
+
+func pkcs7_padding(src []byte, blocklen byte) []byte {
+	pad := blocklen - byte(len(src)%int(blocklen))
+	padded := make([]byte, len(src)+int(pad))
+	copy(padded, src)
+	for i := range int(pad) {
+		padded[len(src)+i] = pad
+	}
+	return padded
+}
+
+func aes_is_ecb_mode(data []byte) bool {
+	m := make(map[string]bool)
+	for i := range len(data) / AES_BLOCKLEN {
+		start := i * AES_BLOCKLEN
+		end := (i + 1) * AES_BLOCKLEN
+		block := string(data[start:end])
+		if m[block] {
+			return true
+		}
+		m[block] = true
+	}
+	return false
 }

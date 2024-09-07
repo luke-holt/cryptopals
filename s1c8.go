@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -10,22 +9,6 @@ import (
 
 	openssl "github.com/golang-fips/openssl/v2"
 )
-
-func repeating_blocks(data []byte) int {
-	const block_len int = 16
-	var blocks int = len(data) / block_len
-	var same int
-	for i := range blocks {
-		cur := data[i*block_len : (i+1)*block_len]
-		for j := i + 1; j < blocks; j++ {
-			other := data[j*block_len : (j+1)*block_len]
-			if bytes.Equal(cur, other) {
-				same++
-			}
-		}
-	}
-	return same
-}
 
 func s1c8() {
 	fmt.Println("> Set 1, Challenge 8: Detect AES in ECB mode")
@@ -50,9 +33,8 @@ func s1c8() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		n := repeating_blocks(data)
-		if n > 0 {
-			fmt.Printf("line %d: %d repeating blocks\n", line, n)
+		if aes_is_ecb_mode(data) {
+			fmt.Printf("Detected AES encrypted string in ECB mode on line %d\n", line)
 		}
 		line++
 	}
