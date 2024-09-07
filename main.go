@@ -10,5 +10,6 @@ func main() {
 	s1c6()
 	s1c7()
 	s1c8()
+	s1c9()
 
 }

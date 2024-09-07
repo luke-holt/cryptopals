@@ -11,10 +11,9 @@ func s1c3() {
 
 	encrypted, _ := hex.DecodeString("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
 
-	k, e := solve_single_char_xor(encrypted)
+	k, _ := solve_single_char_xor(encrypted)
 
 	fmt.Printf("encrypted: %s\n", encrypted)
 	fmt.Printf("key: %d\n", k)
-	fmt.Printf("err: %.05f\n", e)
 	fmt.Printf("decoded: \"%s\"\n", string(encrypt_single_xor_cipher(encrypted, byte(k))))
 }
