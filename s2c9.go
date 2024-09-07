@@ -15,7 +15,7 @@ func pkcs7_padding(src []byte, blocklen byte) []byte {
 	return padded
 }
 
-func s1c9() {
+func s2c9() {
 	fmt.Println("> Set 2, Challenge 9: Implement PKCS#7 padding")
 
 	blocklen := 20

@@ -36,7 +36,9 @@ func s1c4() {
 			file_min_err = min_err
 			file_min_err_key = min_err_key
 			file_min_err_line = line_count
-			file_min_err_decoded = encrypt_single_xor_cipher(line, byte(min_err_key))
+			key := make([]byte, 1)
+			key[0] = byte(min_err_key)
+			file_min_err_decoded = xor_cipher(line, key)
 		}
 
 		line_count++

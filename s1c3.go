@@ -15,5 +15,7 @@ func s1c3() {
 
 	fmt.Printf("encrypted: %s\n", encrypted)
 	fmt.Printf("key: %d\n", k)
-	fmt.Printf("decoded: \"%s\"\n", string(encrypt_single_xor_cipher(encrypted, byte(k))))
+	key := make([]byte, 1)
+	key[0] = byte(k)
+	fmt.Printf("decoded: \"%s\"\n", string(xor_cipher(encrypted, key)))
 }
