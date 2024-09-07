@@ -16,13 +16,13 @@ func rand_bytes(size int) []byte {
 	return b
 }
 
-func aes_encrypt_ecb(data []byte, key [AES_BLOCKLEN]byte) []byte {
+func aes_encrypt_ecb(data []byte, key [AES_BLOCKLEN]byte) ([]byte, error) {
 	unencrypted := pkcs7_padding(data, byte(AES_BLOCKLEN))
 	encrypted := make([]byte, len(unencrypted))
 
 	cipher, err := openssl.NewAESCipher(key[:])
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	for i := range int(len(unencrypted) / AES_BLOCKLEN) {
@@ -31,10 +31,10 @@ func aes_encrypt_ecb(data []byte, key [AES_BLOCKLEN]byte) []byte {
 		cipher.Encrypt(encrypted[start:end], unencrypted[start:end])
 	}
 
-	return encrypted
+	return encrypted, nil
 }
 
-func aes_encrypt_cbc(data []byte, key, iv [AES_BLOCKLEN]byte) []byte {
+func aes_encrypt_cbc(data []byte, key, iv [AES_BLOCKLEN]byte) ([]byte, error) {
 	unencrypted := pkcs7_padding(data, byte(AES_BLOCKLEN))
 	encrypted := make([]byte, len(unencrypted))
 	ciphertext := make([]byte, AES_BLOCKLEN)
@@ -43,7 +43,7 @@ func aes_encrypt_cbc(data []byte, key, iv [AES_BLOCKLEN]byte) []byte {
 
 	cipher, err := openssl.NewAESCipher(key[:])
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	for i := range int(len(unencrypted) / AES_BLOCKLEN) {
@@ -53,10 +53,10 @@ func aes_encrypt_cbc(data []byte, key, iv [AES_BLOCKLEN]byte) []byte {
 		copy(ciphertext, encrypted[start:end])
 	}
 
-	return encrypted
+	return encrypted, nil
 }
 
-func encryption_oracle(raw []byte) []byte {
+func encryption_oracle(raw []byte) ([]byte, error) {
 	// 5-10 bytes before and after
 	before := 5 + rand.Int()%6
 	after := 5 + rand.Int()%6
@@ -69,19 +69,16 @@ func encryption_oracle(raw []byte) []byte {
 
 	key := rand_bytes(AES_BLOCKLEN)
 
-	var encrypted []byte
 	if rand.Int()%2 == 1 {
 		// ecb
-		encrypted = aes_encrypt_ecb(unencrypted, ([AES_BLOCKLEN]byte)(key))
-		fmt.Print("1 ")
+		fmt.Print("expected(ecb)")
+		return aes_encrypt_ecb(unencrypted, ([AES_BLOCKLEN]byte)(key))
 	} else {
 		// cbc
+		fmt.Print("expected(cbc)")
 		iv := rand_bytes(AES_BLOCKLEN)
-		encrypted = aes_encrypt_cbc(unencrypted, ([AES_BLOCKLEN]byte)(key), ([AES_BLOCKLEN]byte)(iv))
-		fmt.Print("0 ")
+		return aes_encrypt_cbc(unencrypted, ([AES_BLOCKLEN]byte)(key), ([AES_BLOCKLEN]byte)(iv))
 	}
-
-	return encrypted
 }
 
 func s2c11() {
@@ -96,18 +93,18 @@ func s2c11() {
 
 	text := []byte("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
 
-	for range 20 {
-		encrypted := encryption_oracle(text)
-
-		var mode string
-		if aes_is_ecb_mode(encrypted) {
-			// ecb
-			mode = string("1 ecb")
-		} else {
-			// cbc
-			mode = string("0 cbc")
+	for range 10 {
+		encrypted, err := encryption_oracle(text)
+		if err != nil {
+			log.Fatal(err)
 		}
 
-		fmt.Println("==", mode)
+		if aes_is_ecb_mode(encrypted) {
+			// ecb
+			fmt.Println(" == actual(ecb)")
+		} else {
+			// cbc
+			fmt.Println(" == actual(cbc)")
+		}
 	}
 }
