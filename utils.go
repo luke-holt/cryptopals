@@ -1,6 +1,11 @@
 package main
 
-import "bytes"
+import (
+	"bytes"
+	"math/rand"
+
+	openssl "github.com/golang-fips/openssl/v2"
+)
 
 const AES_BLOCKLEN int = 16
 
@@ -79,4 +84,65 @@ func aes_is_ecb_mode(data []byte) bool {
 		m[block] = true
 	}
 	return false
+}
+
+func aes_encrypt_ecb(data []byte, key [AES_BLOCKLEN]byte) ([]byte, error) {
+	unencrypted := pkcs7_padding(data, byte(AES_BLOCKLEN))
+	encrypted := make([]byte, len(unencrypted))
+
+	cipher, err := openssl.NewAESCipher(key[:])
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range int(len(unencrypted) / AES_BLOCKLEN) {
+		start := i * AES_BLOCKLEN
+		end := (i + 1) * AES_BLOCKLEN
+		cipher.Encrypt(encrypted[start:end], unencrypted[start:end])
+	}
+
+	return encrypted, nil
+}
+
+func aes_encrypt_cbc(data []byte, key, iv [AES_BLOCKLEN]byte) ([]byte, error) {
+	unencrypted := pkcs7_padding(data, byte(AES_BLOCKLEN))
+	encrypted := make([]byte, len(unencrypted))
+	ciphertext := make([]byte, AES_BLOCKLEN)
+
+	copy(ciphertext, iv[:])
+
+	cipher, err := openssl.NewAESCipher(key[:])
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range int(len(unencrypted) / AES_BLOCKLEN) {
+		start := i * AES_BLOCKLEN
+		end := (i + 1) * AES_BLOCKLEN
+		cipher.Encrypt(encrypted[start:end], xor_cipher(unencrypted[start:end], ciphertext))
+		copy(ciphertext, encrypted[start:end])
+	}
+
+	return encrypted, nil
+}
+
+func rand_bytes(size int) []byte {
+	b := make([]byte, size)
+	for i := range b {
+		b[i] = byte(rand.Int() % 256)
+	}
+	return b
+}
+
+func concat(a, b []byte) []byte {
+	x := make([]byte, len(a)+len(b))
+	copy(x[:len(a)], a)
+	copy(x[len(a):], b)
+	return x
+}
+
+func memset(data *[]byte, val byte) {
+	for i := range *data {
+		(*data)[i] = val
+	}
 }

@@ -8,54 +8,6 @@ import (
 	openssl "github.com/golang-fips/openssl/v2"
 )
 
-func rand_bytes(size int) []byte {
-	b := make([]byte, size)
-	for i := range b {
-		b[i] = byte(rand.Int() % 256)
-	}
-	return b
-}
-
-func aes_encrypt_ecb(data []byte, key [AES_BLOCKLEN]byte) ([]byte, error) {
-	unencrypted := pkcs7_padding(data, byte(AES_BLOCKLEN))
-	encrypted := make([]byte, len(unencrypted))
-
-	cipher, err := openssl.NewAESCipher(key[:])
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range int(len(unencrypted) / AES_BLOCKLEN) {
-		start := i * AES_BLOCKLEN
-		end := (i + 1) * AES_BLOCKLEN
-		cipher.Encrypt(encrypted[start:end], unencrypted[start:end])
-	}
-
-	return encrypted, nil
-}
-
-func aes_encrypt_cbc(data []byte, key, iv [AES_BLOCKLEN]byte) ([]byte, error) {
-	unencrypted := pkcs7_padding(data, byte(AES_BLOCKLEN))
-	encrypted := make([]byte, len(unencrypted))
-	ciphertext := make([]byte, AES_BLOCKLEN)
-
-	copy(ciphertext, iv[:])
-
-	cipher, err := openssl.NewAESCipher(key[:])
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range int(len(unencrypted) / AES_BLOCKLEN) {
-		start := i * AES_BLOCKLEN
-		end := (i + 1) * AES_BLOCKLEN
-		cipher.Encrypt(encrypted[start:end], xor_cipher(unencrypted[start:end], ciphertext))
-		copy(ciphertext, encrypted[start:end])
-	}
-
-	return encrypted, nil
-}
-
 func encryption_oracle(raw []byte) ([]byte, error) {
 	// 5-10 bytes before and after
 	before := 5 + rand.Int()%6
