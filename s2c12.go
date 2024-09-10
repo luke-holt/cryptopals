@@ -20,7 +20,7 @@ func s2c12() {
 	libcrypto := string("c:/users/luke/repo/openssl/libcrypto-3-x64.dll")
 	err := openssl.Init(libcrypto)
 	if err != nil {
-		log.Fatal("Could not load openssl lib from ", libcrypto)
+		log.Fatal(err)
 	}
 
 	base64_string := []byte("Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkg\naGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq\ndXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUg\nYnkK")

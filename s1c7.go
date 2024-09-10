@@ -28,7 +28,7 @@ func s1c7() {
 	libcrypto := string("c:/users/luke/repo/openssl/libcrypto-3-x64.dll")
 	err = openssl.Init(libcrypto)
 	if err != nil {
-		log.Fatal("Could not load openssl lib from ", libcrypto)
+		log.Fatal(err)
 	}
 
 	cipher, err := openssl.NewAESCipher(cipher_key)

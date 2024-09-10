@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"math/rand"
 
 	openssl "github.com/golang-fips/openssl/v2"
@@ -62,7 +63,11 @@ func solve_single_char_xor(encrypted []byte) (byte, float64) {
 	return min_err_key, min_err
 }
 
-func pkcs7_padding(src []byte, blocklen byte) []byte {
+func pkcs7_trim(padded []byte) []byte {
+	return padded[:len(padded)-int(padded[len(padded)-1])]
+}
+
+func pkcs7_pad(src []byte, blocklen byte) []byte {
 	pad := blocklen - byte(len(src)%int(blocklen))
 	padded := make([]byte, len(src)+int(pad))
 	copy(padded, src)
@@ -86,8 +91,22 @@ func aes_is_ecb_mode(data []byte) bool {
 	return false
 }
 
+func aes_decrypt_ecb(encrypted []byte, key [AES_BLOCKLEN]byte) ([]byte, error) {
+	unencrypted := make([]byte, len(encrypted))
+	cipher, err := openssl.NewAESCipher(key[:])
+	if err != nil {
+		return nil, err
+	}
+	for i := range int(len(encrypted) / AES_BLOCKLEN) {
+		start := i * AES_BLOCKLEN
+		end := (i + 1) * AES_BLOCKLEN
+		cipher.Decrypt(unencrypted[start:end], encrypted[start:end])
+	}
+	return pkcs7_trim(unencrypted), nil
+}
+
 func aes_encrypt_ecb(data []byte, key [AES_BLOCKLEN]byte) ([]byte, error) {
-	unencrypted := pkcs7_padding(data, byte(AES_BLOCKLEN))
+	unencrypted := pkcs7_pad(data, byte(AES_BLOCKLEN))
 	encrypted := make([]byte, len(unencrypted))
 
 	cipher, err := openssl.NewAESCipher(key[:])
@@ -105,7 +124,7 @@ func aes_encrypt_ecb(data []byte, key [AES_BLOCKLEN]byte) ([]byte, error) {
 }
 
 func aes_encrypt_cbc(data []byte, key, iv [AES_BLOCKLEN]byte) ([]byte, error) {
-	unencrypted := pkcs7_padding(data, byte(AES_BLOCKLEN))
+	unencrypted := pkcs7_pad(data, byte(AES_BLOCKLEN))
 	encrypted := make([]byte, len(unencrypted))
 	ciphertext := make([]byte, AES_BLOCKLEN)
 
@@ -144,5 +163,28 @@ func concat(a, b []byte) []byte {
 func memset(data *[]byte, val byte) {
 	for i := range *data {
 		(*data)[i] = val
+	}
+}
+
+func hexdump(data []byte, blocklen int) {
+	for i := range data {
+		if i%blocklen == 0 && i != 0 {
+			fmt.Printf("\n")
+		}
+		if i%blocklen == 0 {
+			fmt.Printf("%04x    ", i)
+		}
+		fmt.Printf("%02x ", data[i])
+		if (i+1)%blocklen == 0 {
+			fmt.Printf("   %s", string(data[i+1-blocklen:i+1]))
+		}
+	}
+	rem := len(data) % blocklen
+	if rem != 0 {
+		space := make([]byte, (blocklen-rem)*3)
+		memset(&space, byte(' '))
+		fmt.Printf("%s   %s\n", space, string(data[len(data)-rem:]))
+	} else {
+		fmt.Printf("\n")
 	}
 }
