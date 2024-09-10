@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math/rand"
+	"strings"
 
 	openssl "github.com/golang-fips/openssl/v2"
 )
@@ -22,25 +23,37 @@ func xor_cipher(raw []byte, key []byte) []byte {
 	return encrypted
 }
 
-func sanitize(s []byte) []byte {
-	var out bytes.Buffer
+func sanitize(s []byte) string {
+	var b bytes.Buffer
 	for _, char := range s {
-		if within(int(char), int('A'), int('Z')) {
-			out.WriteByte(byte(char) + (byte('a') - byte('A')))
-		} else if char == byte(' ') {
-			out.WriteByte(char)
-		} else if !within(int(char), int('a'), int('z')) {
-			out.WriteByte('.')
+		if within(int(char), int(' '), int('~')) {
+			b.WriteByte(char)
 		} else {
-			out.WriteByte(char)
+			b.WriteByte('.')
 		}
 	}
-	return out.Bytes()
+	return b.String()
 }
 
 func unknown_letter_rate(s []byte) float64 {
+	letter_norm := func(s []byte) []byte {
+		var out bytes.Buffer
+		for _, char := range s {
+			if within(int(char), int('A'), int('Z')) {
+				out.WriteByte(byte(char) + (byte('a') - byte('A')))
+			} else if char == byte(' ') {
+				out.WriteByte(char)
+			} else if !within(int(char), int('a'), int('z')) {
+				out.WriteByte('.')
+			} else {
+				out.WriteByte(char)
+			}
+		}
+		return out.Bytes()
+	}
+
 	letter_count := make(map[byte]int)
-	san := sanitize(s)
+	san := letter_norm(s)
 	for _, char := range san {
 		letter_count[char]++
 	}
@@ -153,10 +166,17 @@ func rand_bytes(size int) []byte {
 	return b
 }
 
-func concat(a, b []byte) []byte {
-	x := make([]byte, len(a)+len(b))
-	copy(x[:len(a)], a)
-	copy(x[len(a):], b)
+func concat(strs ...[]byte) []byte {
+	var size int
+	for i := range strs {
+		size += len(strs[i])
+	}
+	x := make([]byte, size)
+	var offset int
+	for i := range strs {
+		copy(x[offset:offset+len(strs[i])], strs[i])
+		offset += len(strs[i])
+	}
 	return x
 }
 
@@ -167,24 +187,24 @@ func memset(data *[]byte, val byte) {
 }
 
 func hexdump(data []byte, blocklen int) {
+	var sb strings.Builder
 	for i := range data {
 		if i%blocklen == 0 && i != 0 {
-			fmt.Printf("\n")
+			fmt.Fprintf(&sb, "\n")
 		}
 		if i%blocklen == 0 {
-			fmt.Printf("%04x    ", i)
+			fmt.Fprintf(&sb, "%04x    ", i)
 		}
-		fmt.Printf("%02x ", data[i])
+		fmt.Fprintf(&sb, "%02x ", data[i])
 		if (i+1)%blocklen == 0 {
-			fmt.Printf("   %s", string(data[i+1-blocklen:i+1]))
+			fmt.Fprintf(&sb, "   %s", sanitize(data[i+1-blocklen:i+1]))
 		}
 	}
 	rem := len(data) % blocklen
 	if rem != 0 {
 		space := make([]byte, (blocklen-rem)*3)
 		memset(&space, byte(' '))
-		fmt.Printf("%s   %s\n", space, string(data[len(data)-rem:]))
-	} else {
-		fmt.Printf("\n")
+		fmt.Fprintf(&sb, "%s   %s", space, sanitize(data[len(data)-rem:]))
 	}
+	fmt.Println(sb.String())
 }

@@ -31,22 +31,10 @@ func s1c7() {
 		log.Fatal(err)
 	}
 
-	cipher, err := openssl.NewAESCipher(cipher_key)
+	decrypted, err := aes_decrypt_ecb(base64_decoded_buffer, [AES_BLOCKLEN]byte(cipher_key))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal()
 	}
 
-	var decrypted []byte = make([]byte, len(base64_decoded_buffer))
-	cipher.Decrypt(decrypted, base64_decoded_buffer)
-
-	var solution []byte = make([]byte, 0)
-	var zeroes int
-	for _, b := range decrypted {
-		if b == 0 {
-			zeroes++
-		} else {
-			solution = append(solution, b)
-		}
-	}
-	fmt.Printf("Solution: \"%s\", followed by %d zeroes (\"black\")\n", solution, zeroes)
+	fmt.Println(string(decrypted))
 }

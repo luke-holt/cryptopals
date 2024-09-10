@@ -9,10 +9,6 @@ import (
 	openssl "github.com/golang-fips/openssl/v2"
 )
 
-func oracle(mine, unknown []byte) ([]byte, error) {
-	return aes_encrypt_ecb(concat(mine, unknown), ([AES_BLOCKLEN]byte)(rand_bytes(AES_BLOCKLEN)))
-}
-
 func s2c12() {
 
 	fmt.Println("> Set 2, Challenge 12: Byte-at-a-time ECB decryption (Simple)")
@@ -28,6 +24,10 @@ func s2c12() {
 	_, err = base64.StdEncoding.Decode(unknown, base64_string)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	oracle := func(bufs ...[]byte) ([]byte, error) {
+		return aes_encrypt_ecb(concat(bufs...), ([AES_BLOCKLEN]byte)(rand_bytes(AES_BLOCKLEN)))
 	}
 
 	// find blocklen
@@ -52,8 +52,7 @@ func s2c12() {
 
 	// verify that aes cipher mode is ecb
 	tmp := make([]byte, blocklen*4+1)
-	ecb_mode_test_str := concat(tmp, unknown)
-	encrypted, err := aes_encrypt_ecb(ecb_mode_test_str, ([AES_BLOCKLEN]byte)(rand_bytes(AES_BLOCKLEN)))
+	encrypted, err := oracle(tmp, unknown)
 	if err != nil {
 		log.Fatal(err)
 	}
