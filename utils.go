@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -76,8 +77,17 @@ func solve_single_char_xor(encrypted []byte) (byte, float64) {
 	return min_err_key, min_err
 }
 
-func pkcs7_trim(padded []byte) []byte {
-	return padded[:len(padded)-int(padded[len(padded)-1])]
+func pkcs7_trim(padded []byte) ([]byte, error) {
+	pad := padded[len(padded)-1]
+	if len(padded) < int(pad) {
+		return nil, errors.New("Invalid PKCS#7 padding")
+	}
+	for i := range int(pad) {
+		if padded[len(padded)-(i+1)] != pad {
+			return nil, errors.New("Invalid PKCS#7 padding")
+		}
+	}
+	return padded[:len(padded)-int(pad)], nil
 }
 
 func pkcs7_pad(src []byte, blocklen byte) []byte {
@@ -115,7 +125,7 @@ func aes_decrypt_ecb(encrypted []byte, key [AES_BLOCKLEN]byte) ([]byte, error) {
 		end := (i + 1) * AES_BLOCKLEN
 		cipher.Decrypt(unencrypted[start:end], encrypted[start:end])
 	}
-	return pkcs7_trim(unencrypted), nil
+	return pkcs7_trim(unencrypted)
 }
 
 func aes_encrypt_ecb(data []byte, key [AES_BLOCKLEN]byte) ([]byte, error) {
