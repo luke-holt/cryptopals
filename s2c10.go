@@ -31,26 +31,10 @@ func s2c10() {
 
 	cipher_key := []byte("YELLOW SUBMARINE")
 
-	cipher, err := openssl.NewAESCipher(cipher_key)
+	iv := [AES_BLOCKLEN]byte{}
+	decrypted, err := aes_decrypt_cbc(base64_decoded_buffer, [AES_BLOCKLEN]byte(cipher_key), iv)
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	decrypted := make([]byte, len(base64_decoded_buffer))
-
-	iv := make([]byte, AES_BLOCKLEN)
-	for i := range int(len(base64_decoded_buffer) / AES_BLOCKLEN) {
-		start := i * AES_BLOCKLEN
-		end := min((i+1)*AES_BLOCKLEN, len(base64_decoded_buffer))
-
-		ciphertext := base64_decoded_buffer[start:end]
-		block := make([]byte, len(ciphertext))
-
-		cipher.Decrypt(block, ciphertext)
-
-		copy(decrypted[start:end], xor_cipher(block, iv))
-
-		copy(iv, ciphertext)
 	}
 
 	fmt.Println(string(decrypted))

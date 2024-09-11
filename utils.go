@@ -168,6 +168,26 @@ func aes_encrypt_cbc(data []byte, key, iv [AES_BLOCKLEN]byte) ([]byte, error) {
 	return encrypted, nil
 }
 
+func aes_decrypt_cbc(encrypted []byte, key, iv [AES_BLOCKLEN]byte) ([]byte, error) {
+	decrypted := make([]byte, len(encrypted))
+	block := make([]byte, len(iv))
+
+	cipher, err := openssl.NewAESCipher(key[:])
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range int(len(encrypted) / AES_BLOCKLEN) {
+		start := i * AES_BLOCKLEN
+		end := (i + 1) * AES_BLOCKLEN
+		cipher.Decrypt(decrypted[start:end], encrypted[start:end])
+		copy(decrypted[start:end], xor_cipher(decrypted[start:end], block))
+		copy(block, encrypted[start:end])
+	}
+
+	return pkcs7_trim(decrypted)
+}
+
 func rand_bytes(size int) []byte {
 	b := make([]byte, size)
 	for i := range b {
