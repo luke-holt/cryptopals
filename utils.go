@@ -80,11 +80,11 @@ func solve_single_char_xor(encrypted []byte) (byte, float64) {
 func pkcs7_trim(padded []byte) ([]byte, error) {
 	pad := padded[len(padded)-1]
 	if len(padded) < int(pad) {
-		return nil, errors.New("Invalid PKCS#7 padding")
+		return nil, errors.New("invalid pkcs#7 padding")
 	}
 	for i := range int(pad) {
 		if padded[len(padded)-(i+1)] != pad {
-			return nil, errors.New("Invalid PKCS#7 padding")
+			return nil, errors.New("invalid pkcs#7 padding")
 		}
 	}
 	return padded[:len(padded)-int(pad)], nil
